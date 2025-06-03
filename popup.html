@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Robux Spend Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 16px;
+      width: 320px;
+    }
+
+    h1 {
+      font-size: 18px;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+
+    #fetchButton {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 16px;
+      background-color: #e81123;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    #fetchButton:disabled {
+      background-color: #aaa;
+      cursor: wait;
+    }
+
+    .item {
+      background-color: white;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .item span {
+      float: right;
+      font-weight: bold;
+      color: green;
+    }
+
+    #spinner {
+      display: none;
+      margin: 0 auto 10px;
+      width: 24px;
+      height: 24px;
+      border: 3px solid #ccc;
+      border-top: 3px solid #e81123;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <h1>Robux Spend Tracker</h1>
+  <button id="fetchButton">Fetch Transactions</button>
+  <div id="spinner"></div>
+  <div id="output">Click the button above to begin.</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
