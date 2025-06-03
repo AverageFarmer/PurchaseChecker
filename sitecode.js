@@ -9,7 +9,7 @@ const PORT = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-app.post("/transactions", async (req, res) => {
+app.post("/api/transactions", async (req, res) => {
     const { cookie, sort } = req.body;
 
     if (!cookie) return res.status(400).json({ error: "No cookie provided." });
