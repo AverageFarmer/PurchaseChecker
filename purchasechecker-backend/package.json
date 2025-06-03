@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "noblox": "^4.8.5",
+    "noblox.js": "^6.2.0"
+  }
+}
