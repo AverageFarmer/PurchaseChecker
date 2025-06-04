@@ -11,35 +11,58 @@ app.use(cors());
 app.use(bodyParser.json());
 
 app.post("/api/transactions", async (req, res) => {
-    const { cookie, sort } = req.body;
+  const { cookie, sort } = req.body;
 
-    if (!cookie) return res.status(400).json({ error: "No cookie provided." });
+  if (!cookie) return res.status(400).json({ error: "No cookie provided." });
 
-    try {
-        await noblox.setCookie(cookie);
-        const transactions = await noblox.getUserTransactions("Purchase", 2000);
+  try {
+    await noblox.setCookie(cookie);
+    const transactions = await noblox.getUserTransactions("Purchase", 2000);
 
-        const dets = {};
+    const dets = {};
 
-        for (const tx of transactions) {
-            const cost = Math.abs(tx.currency.amount);
-            const place = tx.details.place?.name || "Unknown";
-            if (!dets[place]) dets[place] = 0;
-            dets[place] += cost;
-        }
+    for (const tx of transactions) {
+      const cost = Math.abs(tx.currency.amount);
+      const type = tx.details.type;
+      const name = tx.details.name || "Unknown item";
+      const place = tx.details.place?.name || "Unknown";
 
-        const sorted = Object.entries(dets)
-            .sort((a, b) => sort === "asc" ? a[1] - b[1] : b[1] - a[1])
-            .reduce((obj, [key, val]) => {
-                obj[key] = val;
-                return obj;
-            }, {});
+      if (!dets[place]) {
+        dets[place] = {
+          total: 0,
+          devTotal: 0,
+          passTotal: 0,
+          items: []
+        };
+      }
 
-        res.json(sorted);
-    } catch (err) {
-        console.error("Error:", err);
-        res.status(500).json({ error: "Failed to fetch transactions." });
+      dets[place].total += cost;
+
+      if (type === "DeveloperProduct") {
+        dets[place].devTotal += cost;
+      } else if (type === "GamePass") {
+        dets[place].passTotal += cost;
+      }
+
+      dets[place].items.push({
+        name,
+        price: cost,
+        type
+      });
     }
+
+    const sorted = Object.entries(dets)
+      .sort((a, b) => sort === "asc" ? a[1].total - b[1].total : b[1].total - a[1].total)
+      .reduce((obj, [key, val]) => {
+        obj[key] = val;
+        return obj;
+      }, {});
+
+    res.json(sorted);
+  } catch (err) {
+    console.error("Error:", err);
+    res.status(500).json({ error: "Failed to fetch transactions." });
+  }
 });
 
 app.listen(PORT, () => {
