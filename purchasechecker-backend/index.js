@@ -17,7 +17,7 @@ async function fetchAllTransactions(cookie, sort) {
   };
 
   const userInfo = await fetch("https://users.roblox.com/v1/users/authenticated", { headers });
- 
+
   if (!userInfo.ok) {
     throw new Error(`Failed to authenticate user: ${userInfo.status}`);
   }
@@ -32,6 +32,7 @@ async function fetchAllTransactions(cookie, sort) {
   let cursor = null;
   let allTransactions = [];
   let retry = 0;
+  let delay = 200;
 
   console.log("User ID fetched:", userId);
 
@@ -53,14 +54,18 @@ async function fetchAllTransactions(cookie, sort) {
         allTransactions = allTransactions.concat(json.data);
         cursor = json.nextPageCursor;
         retry = 0; // reset retry if successful
+        delay = 200;
       } else {
-        if (++retry > 2) break;
+        delay = 1500;
+        if (++retry > 5) break;
       }
     } catch (err) {
       console.error("Failed to parse JSON:", text);
-      if (++retry > 2) break;
+      if (++retry > 5) break;
     }
 
+    // Delay to avoid rate limits
+    await new Promise(resolve => setTimeout(resolve, delay)); 
   } while (cursor);
 
   console.warn("Fetched", allTransactions.length, "transactions.");

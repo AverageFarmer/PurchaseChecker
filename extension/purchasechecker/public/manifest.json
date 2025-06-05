@@ -3,7 +3,7 @@
   "name": "Robux Spent Tracker",
   "version": "1.0",
   "description": "Track your Roblox transaction history",
-  "permissions": ["cookies", "storage", "activeTab", "scripting"],
+  "permissions": ["cookies"],
   "host_permissions": [
     "https://www.roblox.com/",
     "https://purchasechecker.me/"

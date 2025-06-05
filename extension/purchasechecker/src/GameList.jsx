@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useEffect } from 'react';
 import './GameList.css';
 
@@ -23,8 +25,8 @@ export default function GameList({ data }) {
   }, [data]);
 
   useEffect(() => {
-    const duration = 600;
-    const frames = 30;
+    const duration = 6000;
+    const frames = 60;
     const interval = duration / frames;
     const step = (target, current) => (target - current) / frames;
 
