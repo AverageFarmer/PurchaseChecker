@@ -94,7 +94,7 @@ export default function GameList({ data }) {
                   <ul>
                     {info.items.map((item, i) => (
                       <li key={i} className="game-item">
-                        <span>{item.name} ({item.type})</span>
+                        <span>{item.name} </span>
                         <span className="r-currency">{numberWithCommas(item.price)} R$</span>
                       </li>
                     ))}

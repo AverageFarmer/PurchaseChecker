@@ -3,7 +3,7 @@
   --text: #000000;
   --button-bg: #ddd;
   --button-text: #000;
-  --highlight: #e81123;
+  --highlight: #1e409a;
   --card-bg: #fff;
   --border: #ccc;
 }
@@ -14,7 +14,6 @@
     --text: #f0f0f0;
     --button-bg: #333;
     --button-text: #f0f0f0;
-    --highlight: #e81123;
     --card-bg: #2b2b2b;
     --border: #444;
   }

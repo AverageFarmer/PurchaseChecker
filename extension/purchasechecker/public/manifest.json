@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Robux Spend Tracker",
+  "name": "Robux Spent Tracker",
   "version": "1.0",
   "description": "Track your Roblox transaction history",
   "permissions": ["cookies", "storage", "activeTab", "scripting"],
@@ -10,7 +10,7 @@
   ],
   "action": {
     "default_popup": "index.html",
-    "default_title": "Robux Spend Tracker"
+    "default_title": "Robux Spent Tracker"
   },
   "icons": {
     "48": "icon.png",

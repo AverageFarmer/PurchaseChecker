@@ -45,7 +45,7 @@ export default function Popup() {
   return (
     <div className="popup-container">
       <div className="popup-inner">
-        <h1 className="popup-title">Robux Spend Tracker</h1>
+        <h1 className="popup-title">Robux Spent Tracker</h1>
 
         {loading ? (
           <div className="loading-state">
