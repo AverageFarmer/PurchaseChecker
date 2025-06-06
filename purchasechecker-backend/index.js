@@ -10,75 +10,54 @@ const PORT = 3000;
 app.use(cors());
 app.use(bodyParser.json());
 
-async function fetchAllTransactions(cookie, sort) {
+app.post("/api/transactions", async (req, res) => {
+  const { cookie, sort, cursor: initialCursor } = req.body;
+
+  if (!cookie) return res.status(400).json({ error: "No cookie provided." });
+
   const headers = {
     "Cookie": `.ROBLOSECURITY=${cookie}`,
     "Content-Type": "application/json"
   };
 
-  const userInfo = await fetch("https://users.roblox.com/v1/users/authenticated", { headers });
+  try {
+    // Get user ID
+    const userInfo = await fetch("https://users.roblox.com/v1/users/authenticated", { headers });
+    if (!userInfo.ok) throw new Error(`Failed to authenticate user: ${userInfo.status}`);
+    const userData = await userInfo.json();
+    if (!userData.id) throw new Error("Invalid user ID");
+    const userId = userData.id;
 
-  if (!userInfo.ok) {
-    throw new Error(`Failed to authenticate user: ${userInfo.status}`);
-  }
+    // Fetch up to 2000 transactions (20 pages of 100)
+    let transactions = [];
+    let cursor = initialCursor || null;
+    let pages = 0;
+    let nextPageCursor = null;
 
-  const userData = await userInfo.json();
+    while (pages < 20 && transactions.length < 2000) {
+      const url = new URL(`https://economy.roblox.com/v2/users/${userId}/transactions`);
+      url.searchParams.set("transactionType", "Purchase");
+      url.searchParams.set("limit", 100);
+      if (cursor) url.searchParams.set("cursor", cursor);
+      
+      const pageRes = await fetch(url.toString(), { headers });
+      const pageJson = await pageRes.json();
 
-  if (!userData.id) {
-    throw new Error("Could not retrieve valid user ID. Cookie may be invalid.");
-  }
-
-  const userId = userData.id;
-  let cursor = null;
-  let allTransactions = [];
-  let retry = 0;
-  let delay = 200;
-
-  console.log("User ID fetched:", userId);
-
-  do {
-    const url = new URL(`https://economy.roblox.com/v2/users/${userId}/transactions`);
-    url.searchParams.set("transactionType", "Purchase");
-    url.searchParams.set("limit", 100);
-    if (cursor) url.searchParams.set("cursor", cursor);
-
-    const res = await fetch(url.toString(), { headers });
-    const text = await res.text();
-
-    try {
-      const json = JSON.parse(text);
       console.log("Fetching transactions from:", url.toString());
-      console.log("Response JSON:", JSON.stringify(json, null, 2));
+      console.log("Response JSON:", JSON.stringify(pageJson, null, 2));
 
-      if (Array.isArray(json.data)) {
-        allTransactions = allTransactions.concat(json.data);
-        cursor = json.nextPageCursor;
-        retry = 0; // reset retry if successful
-        delay = 200;
-      } else {
-        delay = 1500;
-        if (++retry > 5) break;
-      }
-    } catch (err) {
-      console.error("Failed to parse JSON:", text);
-      if (++retry > 5) break;
+      if (!Array.isArray(pageJson.data)) break;
+
+      transactions.push(...pageJson.data);
+      cursor = pageJson.nextPageCursor;
+      nextPageCursor = cursor || null;
+
+      if (!cursor) break;
+      pages++;
+
+      await new Promise(resolve => setTimeout(resolve, 200)); // rate limit buffer
     }
 
-    // Delay to avoid rate limits
-    await new Promise(resolve => setTimeout(resolve, delay)); 
-  } while (cursor);
-
-  console.warn("Fetched", allTransactions.length, "transactions.");
-  return allTransactions;
-}
-
-app.post("/api/transactions", async (req, res) => {
-  const { cookie, sort } = req.body;
-
-  if (!cookie) return res.status(400).json({ error: "No cookie provided." });
-
-  try {
-    const transactions = await fetchAllTransactions(cookie, sort);
     const dets = {};
 
     for (const tx of transactions) {
@@ -103,11 +82,15 @@ app.post("/api/transactions", async (req, res) => {
       dets[place].items.push({ name, price: cost, type });
     }
 
+    // Sort by total spent per game
     const sorted = Object.entries(dets)
       .sort((a, b) => sort === "asc" ? a[1].total - b[1].total : b[1].total - a[1].total)
       .reduce((obj, [key, val]) => (obj[key] = val, obj), {});
 
-    res.json(sorted);
+    res.json({
+      data: sorted,
+      nextPageCursor
+    });
   } catch (err) {
     console.error("Error:", err);
     res.status(500).json({ error: "Failed to fetch transactions." });

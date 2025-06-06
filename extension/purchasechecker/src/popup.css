@@ -3,6 +3,7 @@
   --text: #000;
   --button-bg: #233565;
   --button-text: white;
+  --button-disabled: #aaa;
   --shadow: rgba(0, 0, 0, 0.1);
   --spinner-border: #ccc;
   --spinner-highlight: #e81123;
@@ -14,6 +15,7 @@
     --bg: #1e1e1e;
     --text: #f0f0f0;
     --button-text: white;
+    --button-disabled: #555;
     --shadow: rgba(255, 255, 255, 0.05);
     --spinner-border: #444;
     --spinner-highlight: #e81123;
@@ -41,7 +43,8 @@
   margin-bottom: 16px;
 }
 
-.fetch-button {
+.fetch-button,
+.load-more-button {
   display: block;
   width: 100%;
   padding: 10px;
@@ -51,6 +54,12 @@
   border-radius: 8px;
   font-weight: bold;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.load-more-button:disabled {
+  background-color: var(--button-disabled);
+  cursor: not-allowed;
 }
 
 .error-text {
@@ -72,7 +81,16 @@
   margin: 0 auto 10px;
 }
 
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.info-note {
+  margin-top: 12px;
+  font-size: 12px;
+  text-align: center;
+  color: rgb(252, 109, 109);
+  font-style: italic;
 }

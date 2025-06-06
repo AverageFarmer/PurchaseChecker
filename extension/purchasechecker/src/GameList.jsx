@@ -1,9 +1,7 @@
-
-
 import React, { useState, useMemo, useEffect } from 'react';
 import './GameList.css';
 
-export default function GameList({ data }) {
+export default function GameList({ data, onLoadMore, canLoadMore, countdown }) {
   const [expanded, setExpanded] = useState({});
   const [tab, setTab] = useState("Games");
   const [animatedTotals, setAnimatedTotals] = useState({ total: 0, dev: 0, pass: 0 });
@@ -24,8 +22,12 @@ export default function GameList({ data }) {
     return { total, dev, pass };
   }, [data]);
 
+  const sortedGames = useMemo(() => {
+    return Object.entries(data).sort((a, b) => b[1].total - a[1].total); // Descending sort
+  }, [data]);
+
   useEffect(() => {
-    const duration = 6000;
+    const duration = 800;
     const frames = 60;
     const interval = duration / frames;
     const step = (target, current) => (target - current) / frames;
@@ -74,13 +76,26 @@ export default function GameList({ data }) {
 
       {tab === "Games" ? (
         <>
-          <div className="summary">
-            <p>Total Spent: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.total))} R$</span></p>
-            <p>DevProducts: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.dev))} R$</span></p>
-            <p>GamePasses: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.pass))} R$</span></p>
-          </div>
+          {canLoadMore && (
+            <button
+              className={`load-more-btn ${countdown > 0 ? "countdown-anim" : ""}`}
+              onClick={onLoadMore}
+              disabled={countdown > 0}
+            >
+              {countdown > 0
+                ? `Load more in ${countdown}s...`
+                : "Load More Transactions"}
+            </button>
+          )}
 
-          {Object.entries(data).map(([game, info]) => (
+          <div className="summary">
+            <p>Total Spent: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.total))} R$ : ${numberWithCommas(Math.round(animatedTotals.total * .0035))}</span></p>
+            <p>DevProducts: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.dev))} R$ : ${numberWithCommas(Math.round(animatedTotals.dev * .0035))}</span></p>
+            <p>GamePasses: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.pass))} R$ : ${numberWithCommas(Math.round(animatedTotals.pass * .0035))}</span></p>
+          </div>
+          
+
+          {sortedGames.map(([game, info]) => (
             <div key={game} className="game-entry">
               <button
                 className="game-toggle"
