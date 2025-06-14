@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import './GameList.css';
 
-export default function GameList({ data, onLoadMore, canLoadMore, countdown }) {
+export default function GameList({ data, devex, onLoadMore, canLoadMore, countdown, onFetchDevex }) {
   const [expanded, setExpanded] = useState({});
   const [tab, setTab] = useState("Games");
   const [animatedTotals, setAnimatedTotals] = useState({ total: 0, dev: 0, pass: 0 });
@@ -23,7 +23,7 @@ export default function GameList({ data, onLoadMore, canLoadMore, countdown }) {
   }, [data]);
 
   const sortedGames = useMemo(() => {
-    return Object.entries(data).sort((a, b) => b[1].total - a[1].total); // Descending sort
+    return Object.entries(data).sort((a, b) => b[1].total - a[1].total);
   }, [data]);
 
   useEffect(() => {
@@ -67,10 +67,10 @@ export default function GameList({ data, onLoadMore, canLoadMore, countdown }) {
           Games
         </button>
         <button
-          onClick={() => setTab("Soon")}
-          className={tab === "Soon" ? "tab-button active" : "tab-button"}
+          onClick={() => setTab("DevEx")}
+          className={tab === "DevEx" ? "tab-button active" : "tab-button"}
         >
-          Soon!
+          DevEx
         </button>
       </div>
 
@@ -93,7 +93,6 @@ export default function GameList({ data, onLoadMore, canLoadMore, countdown }) {
             <p>DevProducts: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.dev))} R$ : ${numberWithCommas(Math.round(animatedTotals.dev * .0035))}</span></p>
             <p>GamePasses: <span className="r-currency">{numberWithCommas(Math.round(animatedTotals.pass))} R$ : ${numberWithCommas(Math.round(animatedTotals.pass * .0035))}</span></p>
           </div>
-          
 
           {sortedGames.map(([game, info]) => (
             <div key={game} className="game-entry">
@@ -122,7 +121,21 @@ export default function GameList({ data, onLoadMore, canLoadMore, countdown }) {
           ))}
         </>
       ) : (
-        <div className="coming-soon">Features coming soon...</div>
+        <div className="devex-tab">
+          <div className="summary">
+            {devex ? (
+              <>
+                <p>Total DevEx'd Robux: <strong>{numberWithCommas(devex.robux)} R$</strong></p>
+                <p>Estimated USD Earned: <strong>${numberWithCommas(devex.usd)}</strong></p>
+              </>
+            ) : (
+              <>
+                <p>No DevEx data found.</p>
+                <button onClick={onFetchDevex} className="fetch-button">Fetch DevEx Data</button>
+              </>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

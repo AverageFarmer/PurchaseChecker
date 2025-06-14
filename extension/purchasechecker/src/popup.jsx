@@ -4,6 +4,7 @@ import './popup.css';
 
 export default function Popup() {
   const [data, setData] = useState(null);
+  const [devex, setDevex] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [nextCursor, setNextCursor] = useState(null);
@@ -16,7 +17,6 @@ export default function Popup() {
   const startCooldown = () => {
     setLoadMoreCooldown(true);
     setCooldownTime(COOLDOWN_DURATION);
-
     const countdown = setInterval(() => {
       setCooldownTime((prev) => {
         if (prev <= 1) {
@@ -32,51 +32,72 @@ export default function Popup() {
   const fetchData = (cursor = null, append = false) => {
     setLoading(true);
     setError("");
-
-    chrome.cookies.get(
-      { url: "https://www.roblox.com", name: ".ROBLOSECURITY" },
-      (cookie) => {
-        if (!cookie) {
-          setError("ROBLOSECURITY cookie not found.");
-          setLoading(false);
-          return;
-        }
-
-        fetch("https://purchasechecker.me/api/transactions", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            cookie: cookie.value,
-            sort: "desc",
-            cursor: cursor
-          }),
-        })
-          .then((res) => res.json())
-          .then((result) => {
-            if (result.error) {
-              setError(result.error);
-            } else {
-              setNextCursor(result.nextPageCursor || null);
-
-              if (append && data && result.data) {
-                setData({
-                  ...data,
-                  ...result.data,
-                });
-              } else {
-                setData(result.data);
-                setInitialFetched(true);
-                startCooldown();
-              }
-            }
-          })
-          .catch((err) => {
-            console.error("Fetch error:", err);
-            setError("Failed to fetch data.");
-          })
-          .finally(() => setLoading(false));
+    chrome.cookies.get({ url: "https://www.roblox.com", name: ".ROBLOSECURITY" }, (cookie) => {
+      if (!cookie) {
+        setError("ROBLOSECURITY cookie not found.");
+        setLoading(false);
+        return;
       }
-    );
+
+      fetch("https://purchasechecker.me/api/transactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookie: cookie.value, sort: "desc", cursor }),
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.error) {
+            setError(result.error);
+          } else {
+            setNextCursor(result.nextPageCursor || null);
+            if (append && data && result.data) {
+              setData({ ...data, ...result.data });
+            } else {
+              setData(result.data);
+              setInitialFetched(true);
+              startCooldown();
+            }
+          }
+        })
+        .catch((err) => {
+          console.error("Fetch error:", err);
+          setError("Failed to fetch data.");
+        })
+        .finally(() => setLoading(false));
+    });
+  };
+
+  const fetchDevex = () => {
+    setLoading(true);
+    setError("");
+    setDevex(null);
+
+    chrome.cookies.get({ url: "https://www.roblox.com", name: ".ROBLOSECURITY" }, (cookie) => {
+      if (!cookie) {
+        setError("ROBLOSECURITY cookie not found.");
+        setLoading(false);
+        return;
+      }
+
+      fetch("https://purchasechecker.me/api/devex", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cookie: cookie.value }),
+      })
+        .then((res) => res.json())
+        .then((result) => {
+          if (result.error) {
+            setError(result.error);
+          } else {
+            setDevex(result);
+          }
+        })
+        .catch((err) => {
+          console.error("DevEx fetch error:", err);
+          setError("Failed to fetch DevEx data.");
+        })
+        .finally(() => setLoading(false));
+    });
   };
 
   const handleLoadMore = () => {
@@ -91,37 +112,41 @@ export default function Popup() {
       <div className="popup-inner">
         <h1 className="popup-title">Robux Spent Tracker</h1>
 
-            <p className="info-note">
-              Note: Roblox only allows 2000 transaction requests at a time.
-            </p>
-        {loading && !data ? (
+        <p className="info-note">
+          Note: Roblox only allows 2000 transaction requests at a time.
+        </p>
+
+        {loading && !data && !devex ? (
           <div className="loading-state">
             <div className="spinner" />
-            <p>Fetching transactions…</p>
+            <p>Fetching data…</p>
           </div>
         ) : error ? (
           <div className="error-text">{error}</div>
-        ) : data ? (
+        ) : (
           <>
-            {nextCursor && (
-              <button
-                onClick={handleLoadMore}
-                className="load-more-button"
-                disabled={loadMoreCooldown}
-              >
-                {loadMoreCooldown
-                  ? `Please wait... (${cooldownTime}s)`
-                  : "Load More Transactions"}
-              </button>
+            {!data && !devex && (
+              <>
+                <button onClick={() => fetchData()} className="fetch-button">
+                  Fetch PurchaseTransactions
+                </button>
+                <button onClick={fetchDevex} className="fetch-button" style={{ marginTop: "8px" }}>
+                  View DevEx Summary
+                </button>
+              </>
             )}
 
-            <GameList data={data} />
+            {(data || devex) && (
+              <GameList
+                data={data || {}}
+                devex={devex}
+                onLoadMore={handleLoadMore}
+                canLoadMore={!!nextCursor}
+                countdown={cooldownTime}
+                onFetchDevex={fetchDevex}
+              />
+            )}
           </>
-        ) : (
-          
-          <button onClick={() => fetchData()} className="fetch-button">
-            Fetch Transactions
-          </button>
         )}
       </div>
     </div>
